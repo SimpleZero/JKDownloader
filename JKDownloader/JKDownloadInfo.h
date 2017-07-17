@@ -14,6 +14,7 @@ typedef NS_ENUM(NSInteger, JKDownloadState) {
     JKDownloadStateLoading, // 下载中
     JKDownloadStateWaiting, // 等待中
     JKDownloadStateSuspend, // 暂停
+    JKDownloadStateStop, // 停止（有此标识不再进行下载，直接跳过）
     JKDownloadStateSuccessed, // 成功
     JKDownloadStateCanceled, // 取消
     JKDownloadStateFailed // 失败

@@ -74,7 +74,6 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
             case JKDownloadStateSuccessed:
                 [btn setTitle:@"完成" forState:UIControlStateNormal];
                 _resumeBtn.enabled = NO;
-                
                 _suspendBtn.enabled = NO;
                 _cancelBtn.enabled = NO;
                 break;

@@ -41,7 +41,10 @@ static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundI
 - (JKDownloadInfo *)loadFileForURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state;
 
 
+// 获取下载info对应的信息状态，不可用于下载
 - (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url;
+// 获取下载info对应的信息状态，可用于下载
+- (JKDownloadInfo *)infoWithURL:(NSString *)url;
 
 
 // 开始/继续
@@ -51,9 +54,10 @@ static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundI
 // 取消/删除
 - (JKDownloadInfo *)cancelWithURL:(NSString *)url;
 
-
-- (JKDownloadInfo *)infoWithURL:(NSString *)url;
-
+// 批量操作
+- (void)resumeWithURLs:(NSArray <NSString *>*)urls;
+- (void)suspendWithURLs:(NSArray <NSString *>*)urls;
+- (void)cancelWithURLs:(NSArray <NSString *>*)urls;
 
 - (void)resumeAll;
 - (void)suspendAll;

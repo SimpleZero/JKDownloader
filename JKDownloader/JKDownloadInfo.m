@@ -300,9 +300,8 @@ static NSNotificationCenter *_notiCenter;
 
 - (void)setError:(NSError *)error {
     _error = error;
+    
     if (error != nil) {
-        
-        
         // 挂起后请求超时 The request timed out.
         if (error.code == -1001 || _state == JKDownloadStateSuspend) {
             _error = nil;

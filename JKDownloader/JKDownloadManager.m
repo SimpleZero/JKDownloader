@@ -17,6 +17,8 @@
 @property (strong, nonatomic) NSArray <JKDownloadInfo *>*loadingInfos;
 @property (strong, nonatomic) NSArray <JKDownloadInfo *>*waitingInfos;
 
+@property (assign, nonatomic, getter=isBatching) BOOL batch;
+
 @property (strong, nonatomic) NSURLSession *session;
 
 @end
@@ -134,6 +136,9 @@
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
+    if (info.state == JKDownloadStateLoading
+        || info.state == JKDownloadStateSuccessed) return info;
+    
     if (info.customDirectoryPath == nil) {
         [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath progress:nil state:nil];
     }
@@ -144,6 +149,8 @@
 - (JKDownloadInfo *)suspendWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
+    if (info.state == JKDownloadStateSuspend) return info;
+    
     [info suspend];
     [self resumeNextInfo];
     return info;
@@ -152,6 +159,8 @@
 - (JKDownloadInfo *)cancelWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
+    if (info.state == JKDownloadStateCanceled) return info;
+    
     [info cancel];
     /*
      cancel 会触发 NSURLSessionDataDelegate 中的 didCompleteWithError，
@@ -177,22 +186,52 @@
     return info;
 }
 
+- (void)resumeWithURLs:(NSArray<NSString *> *)urls {
+    NSMutableArray <JKDownloadInfo *>*arrM = @[].mutableCopy;
+    [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
+        JKDownloadInfo *info = [self infoWithURL:url];
+        [arrM addObject:info];
+    }];
+    self.batch = YES;
+    [arrM enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
+        [info resume];
+    }];
+    self.batch = NO;
+}
+
+#warning stop标识 TO DO
+- (void)suspendWithURLs:(NSArray<NSString *> *)urls {
+    NSMutableArray <JKDownloadInfo *>*arrM = @[].mutableCopy;
+    [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
+        JKDownloadInfo *info = [self infoWithURL:url];
+        [arrM addObject:info];
+    }];
+    
+}
+
+
 - (void)resumeAll {
+    self.batch = YES;
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
         [info resume];
     }];
+    self.batch = NO;
 }
 
 - (void)suspendAll {
+    self.batch = YES;
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
         [info suspend];
     }];
+    self.batch = NO;
 }
 
 - (void)cancelAll {
+    self.batch = YES;
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
         [info cancel];
     }];
+    self.batch = NO;
 }
 
 #pragma mark ==setter、getter
@@ -224,6 +263,7 @@
 #pragma mark ==private
 
 - (void)resumeNextInfo {
+    if (self.isBatching) return;
     JKDownloadInfo *info = self.waitingInfos.firstObject;
     [info resume];
 }
