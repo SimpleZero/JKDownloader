@@ -429,16 +429,6 @@ static NSNotificationCenter *_notiCenter;
 
 - (JKDownloadInfo *)downloadedInfo {
     [self infoConfigWithCustomDirectoryPath:JKDownloadRootDirectory progress:nil state:nil];
-    
-//    if (self.totalSize !=0 && self.downloadedSize == self.totalSize) {
-//        self.state = JKDownloadStateSuccessed;
-//    }
-//    
-//    if ([JKDownloadInfo infoIsDownloadedForURL:self.url]) {
-//        if (_state != JKDownloadStateSuccessed) {
-//            self.state = JKDownloadStateSuccessed;
-//        }
-//    }
     return self;
 }
 
