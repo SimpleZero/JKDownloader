@@ -18,7 +18,6 @@
 		0406A52F1F00AD8100A0FBD6 /* JKDownloadInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 0406A52E1F00AD8100A0FBD6 /* JKDownloadInfo.m */; };
 		0406A5321F00ADF400A0FBD6 /* NSString+JKAdd_MD5.m in Sources */ = {isa = PBXBuildFile; fileRef = 0406A5311F00ADF400A0FBD6 /* NSString+JKAdd_MD5.m */; };
 		0406A5351F00AE4000A0FBD6 /* JKDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0406A5341F00AE4000A0FBD6 /* JKDownloadManager.m */; };
-		0406A5381F00B16E00A0FBD6 /* JKDownloadConst.m in Sources */ = {isa = PBXBuildFile; fileRef = 0406A5371F00B16E00A0FBD6 /* JKDownloadConst.m */; };
 		04E937FD1F0F39A70005291B /* JKMonitorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 04E937FC1F0F39A70005291B /* JKMonitorView.m */; };
 /* End PBXBuildFile section */
 
@@ -62,8 +61,6 @@
 		0406A5311F00ADF400A0FBD6 /* NSString+JKAdd_MD5.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+JKAdd_MD5.m"; sourceTree = "<group>"; };
 		0406A5331F00AE4000A0FBD6 /* JKDownloadManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JKDownloadManager.h; sourceTree = "<group>"; };
 		0406A5341F00AE4000A0FBD6 /* JKDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JKDownloadManager.m; sourceTree = "<group>"; };
-		0406A5361F00B16E00A0FBD6 /* JKDownloadConst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JKDownloadConst.h; sourceTree = "<group>"; };
-		0406A5371F00B16E00A0FBD6 /* JKDownloadConst.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JKDownloadConst.m; sourceTree = "<group>"; };
 		04E937FB1F0F39A70005291B /* JKMonitorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JKMonitorView.h; sourceTree = "<group>"; };
 		04E937FC1F0F39A70005291B /* JKMonitorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JKMonitorView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -126,8 +123,6 @@
 				0406A5341F00AE4000A0FBD6 /* JKDownloadManager.m */,
 				0406A52D1F00AD8100A0FBD6 /* JKDownloadInfo.h */,
 				0406A52E1F00AD8100A0FBD6 /* JKDownloadInfo.m */,
-				0406A5361F00B16E00A0FBD6 /* JKDownloadConst.h */,
-				0406A5371F00B16E00A0FBD6 /* JKDownloadConst.m */,
 				0406A5301F00ADF400A0FBD6 /* NSString+JKAdd_MD5.h */,
 				0406A5311F00ADF400A0FBD6 /* NSString+JKAdd_MD5.m */,
 				0406A4F91F00AC8300A0FBD6 /* Main.storyboard */,
@@ -306,7 +301,6 @@
 				04E937FD1F0F39A70005291B /* JKMonitorView.m in Sources */,
 				0406A4F81F00AC8300A0FBD6 /* ViewController.m in Sources */,
 				0406A4F51F00AC8300A0FBD6 /* AppDelegate.m in Sources */,
-				0406A5381F00B16E00A0FBD6 /* JKDownloadConst.m in Sources */,
 				0406A5321F00ADF400A0FBD6 /* NSString+JKAdd_MD5.m in Sources */,
 				0406A4F21F00AC8300A0FBD6 /* main.m in Sources */,
 			);

@@ -41,12 +41,8 @@ static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundI
 - (JKDownloadInfo *)loadFileForURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state;
 
 
+- (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url;
 
-// 范围：0.0~1.0
-- (CGFloat)hasDownloadedProgressOfURL:(NSString *)url;
-// 单位：bytes
-- (NSInteger)hasDownloadedSizeOfURL:(NSString *)url;
-- (NSInteger)totalDownloadFileSizeOfURL:(NSString *)url;
 
 // 开始/继续
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url;

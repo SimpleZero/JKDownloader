@@ -126,23 +126,10 @@
 
 }
 
-- (CGFloat)hasDownloadedProgressOfURL:(NSString *)url {
-    if (url == nil) return 0.0;
-    JKDownloadInfo *info = [self infoWithURL:url];
-    return MIN(1.0, 1.0 * info.downloadedSize / info.totalSize);
+- (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url {
+    return [JKDownloadInfo downloadedInfoWithURL:url];
 }
 
-- (NSInteger)hasDownloadedSizeOfURL:(NSString *)url {
-    if (url == nil) return 0.0;
-    JKDownloadInfo *info = [self infoWithURL:url];
-    return info.downloadedSize;
-}
-
-- (NSInteger)totalDownloadFileSizeOfURL:(NSString *)url {
-    if (url == nil) return 0.0;
-    JKDownloadInfo *info = [self infoWithURL:url];
-    return info.totalSize;
-}
 
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url {
     if (url == nil) return nil;

@@ -64,7 +64,6 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
     
     JKDownloadInfo *info = [[JKDownloadManager shareManager] infoWithURL:url];
     [monitorV configMonitorWithDownloaded:info.downloadedSizeString total:info.totalSizeString speed:@"" progress:info.progress];
-    
 }
 
 - (void)resume:(UIButton *)btn {
