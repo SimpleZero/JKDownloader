@@ -103,18 +103,6 @@ static NSNotificationCenter *_notiCenter;
     if (state != nil) self.stateBlock = [state copy];
 }
 
-+ (BOOL)infoIsDownloadedForURL:(NSString *)url {
-    if (url == nil) return NO;
-    JKDownloadInfo *info = [[JKDownloadInfo alloc] init];
-    info.url = [url copy];
-    
-    if (info.totalSize !=0 && info.downloadedSize == info.totalSize) {
-        return YES;
-    }
-    
-    return NO;
-}
-
 + (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url {
     if (url == nil) return nil;
     
@@ -180,8 +168,6 @@ static NSNotificationCenter *_notiCenter;
         return;
     }
     [self.dataTask cancel];
-//    [self.timer setFireDate:[NSDate distantFuture]];
-//    [self done];
 
     dispatch_async(dispatch_get_main_queue(), ^{
         [_fileMgr removeItemAtPath:self.filePath error:nil];
@@ -221,8 +207,6 @@ static NSNotificationCenter *_notiCenter;
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 !self.progressBlock ? : self.progressBlock(self.currentSize, self.downloadedSize, self.totalSize);
-//                !self.progressBlock ? : self.progressBlock(self.downloadSizePerSec, self.downloadedSize, self.totalSize);
-
                 !self.encapsulateProgressBlock ? : self.encapsulateProgressBlock(self.speed, self.downloadedSizeString, self.totalSizeString, self.progress);
                 if (self.needNoti) {
                     [_notiCenter postNotificationName:JKDownloadProgressChangedNoti object:self];
@@ -296,11 +280,6 @@ static NSNotificationCenter *_notiCenter;
         self.timer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(sizePerSec) userInfo:nil repeats:YES];
         [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
     }
-//    
-//    if (self.currentSize == 0) return @"";
-//    
-//    return [[self transferBytesToString:self.currentSize] stringByAppendingString:@"/s"];
-    
     
     if (self.downloadSizePerSec == 0) return @"";
     
@@ -338,12 +317,6 @@ static NSNotificationCenter *_notiCenter;
             }
         }
         
-        
-//        if (error.code == -999) {
-//            self.state = JKDownloadStateCanceled;
-//        } else {
-//            self.state = JKDownloadStateFailed;
-//        }
     }
 }
 

@@ -60,7 +60,6 @@ static NSString * const JKDownloadStateChangedNoti = @"JKDownloadStateChangedNot
 - (void)infoConfigWithCustomDirectoryPath:(NSString *)customDirectoryPath encapsulateprogress:(JKDownloadEncapsulateProgressBlock)encapsulateprogress state:(JKDownloadStateBlock)state;
 
 
-+ (BOOL)infoIsDownloadedForURL:(NSString *)url;
 + (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url;
 - (NSString *)transferBytesToString:(NSInteger)bytes;
 

@@ -65,10 +65,7 @@
     
     if (url == nil) return nil;
     
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
-    
-//    if (info == nil) return;
     
     if (info.state == JKDownloadStateSuccessed ||
         info.state == JKDownloadStateLoading ||
@@ -96,7 +93,6 @@
     
     if (url == nil) return nil;
     
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     
     // 已完成
@@ -130,34 +126,26 @@
 
 }
 
-- (BOOL)isDownloadedWithURL:(NSString *)url {
-    return [JKDownloadInfo infoIsDownloadedForURL:url];
-}
-
 - (CGFloat)hasDownloadedProgressOfURL:(NSString *)url {
     if (url == nil) return 0.0;
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     return MIN(1.0, 1.0 * info.downloadedSize / info.totalSize);
 }
 
 - (NSInteger)hasDownloadedSizeOfURL:(NSString *)url {
     if (url == nil) return 0.0;
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     return info.downloadedSize;
 }
 
 - (NSInteger)totalDownloadFileSizeOfURL:(NSString *)url {
     if (url == nil) return 0.0;
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     return info.totalSize;
 }
 
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url {
     if (url == nil) return nil;
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     if (info.customDirectoryPath == nil) {
         [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath progress:nil state:nil];
@@ -168,7 +156,6 @@
 
 - (JKDownloadInfo *)suspendWithURL:(NSString *)url {
     if (url == nil) return nil;
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     [info suspend];
     [self resumeNextInfo];
@@ -177,7 +164,6 @@
 
 - (JKDownloadInfo *)cancelWithURL:(NSString *)url {
     if (url == nil) return nil;
-//    JKDownloadInfo *info = [self infoForURL:url];
     JKDownloadInfo *info = [self infoWithURL:url];
     [info cancel];
     /*
@@ -250,26 +236,6 @@
 
 #pragma mark ==private
 
-/*
-// 如果infos不存在该info，配置info基本信息，并加入infos
-- (JKDownloadInfo *)infoForURL:(NSString *)url {
-    if (url == nil) return nil;
-    //内存中查找info
-    JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
-    if (info == nil) {
-        // 磁盘中查找info（判断是否已下载完成）
-        if ([JKDownloadInfo infoIsDownloadedForURL:url]) {
-            return nil;
-        } else {
-            // 磁盘中未下载完成、从未下载
-            info = [JKDownloadInfo infoWithURL:url inSession:self.session];
-            [self.infos addObject:info];;
-        }
-    }
-    return info;
-}
- */
-
 - (void)resumeNextInfo {
     JKDownloadInfo *info = self.waitingInfos.firstObject;
     [info resume];
@@ -279,7 +245,6 @@
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSHTTPURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
     
-//    JKDownloadInfo *info = [self infoForURL:dataTask.taskDescription];
     JKDownloadInfo *info = [self infoWithURL:dataTask.taskDescription];
     [info didReceiveResponse:response];
     
@@ -288,14 +253,12 @@
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
     
-//    JKDownloadInfo *info = [self infoForURL:dataTask.taskDescription];
     JKDownloadInfo *info = [self infoWithURL:dataTask.taskDescription];
     [info didReceiveData:data];
 }
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
     
-//    JKDownloadInfo *info = [self infoForURL:task.taskDescription];
     JKDownloadInfo *info = [self infoWithURL:task.taskDescription];
     [info didCompleteWithError:error];
     
@@ -304,22 +267,6 @@
 
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session {
-    /*
-    [session getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
-        if (downloadTasks.count == 0) {
-            if (self.backgroundTransferCompletionHandler != nil) {
-                
-                self.backgroundTransferCompletionHandler();
-                
-                UILocalNotification *localNoti = [[UILocalNotification alloc] init];
-                localNoti.alertBody = @"下载结束";
-                [[UIApplication sharedApplication] presentLocalNotificationNow:localNoti];
-                
-                self.backgroundTransferCompletionHandler = nil;
-            }
-        }
-    }];
-    */
     
     self.backgroundTransferCompletionHandler();
     self.backgroundTransferCompletionHandler = nil;

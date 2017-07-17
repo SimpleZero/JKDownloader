@@ -42,7 +42,6 @@ static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundI
 
 
 
-- (BOOL)isDownloadedWithURL:(NSString *)url;
 // 范围：0.0~1.0
 - (CGFloat)hasDownloadedProgressOfURL:(NSString *)url;
 // 单位：bytes
