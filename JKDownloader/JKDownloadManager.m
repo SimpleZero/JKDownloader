@@ -69,8 +69,7 @@
     
     if (info.state == JKDownloadStateSuccessed ||
         info.state == JKDownloadStateLoading ||
-        info.state == JKDownloadStateWaiting ||
-        info.state == JKDownloadStateStop) {
+        info.state == JKDownloadStateWaiting) {
         return info;
     }
     
@@ -137,8 +136,7 @@
     JKDownloadInfo *info = [self infoWithURL:url];
     if (info.state == JKDownloadStateLoading ||
         info.state == JKDownloadStateSuccessed ||
-        info.state == JKDownloadStateWaiting ||
-        info.state == JKDownloadStateStop) {
+        info.state == JKDownloadStateWaiting) {
     
         return info;
     }
@@ -198,6 +196,7 @@
 - (void)resumeWithURLs:(NSArray<NSString *> *)urls {
     NSMutableArray <JKDownloadInfo *>*arrM = @[].mutableCopy;
     [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
+        [self suspendAll];
         JKDownloadInfo *info = [self infoWithURL:url];
         [arrM addObject:info];
     }];
@@ -208,18 +207,21 @@
         } else {
             [info resume];
         }
-
     }];
 }
 
-#warning stop标识 TO DO
 - (void)suspendWithURLs:(NSArray<NSString *> *)urls {
-    NSMutableArray <JKDownloadInfo *>*arrM = @[].mutableCopy;
     [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
-        JKDownloadInfo *info = [self infoWithURL:url];
-        [arrM addObject:info];
+        JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
+        [info suspend];
     }];
-    
+}
+
+- (void)cancelWithURLs:(NSArray<NSString *> *)urls {
+    [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
+        JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
+        [info cancel];
+    }];
 }
 
 
