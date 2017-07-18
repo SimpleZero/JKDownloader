@@ -17,8 +17,6 @@
 @property (strong, nonatomic) NSArray <JKDownloadInfo *>*loadingInfos;
 @property (strong, nonatomic) NSArray <JKDownloadInfo *>*waitingInfos;
 
-@property (assign, nonatomic, getter=isBatching) BOOL batch;
-
 @property (strong, nonatomic) NSURLSession *session;
 
 @end
@@ -71,17 +69,18 @@
     
     if (info.state == JKDownloadStateSuccessed ||
         info.state == JKDownloadStateLoading ||
-        info.state == JKDownloadStateWaiting) {
+        info.state == JKDownloadStateWaiting ||
+        info.state == JKDownloadStateStop) {
         return info;
     }
     
     
     [info infoConfigWithCustomDirectoryPath:directory progress:progress state:state];
     if (self.maxConcurrentCount !=0 && self.maxConcurrentCount == self.loadingInfos.count) {
-        [info waiting];
-    } else {
-        [info resume];
+        JKDownloadInfo *loadingFirstInfo = self.loadingInfos.firstObject;
+        [loadingFirstInfo suspend];
     }
+    [info resume];
     return info;
 }
 
@@ -136,12 +135,22 @@
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
-    if (info.state == JKDownloadStateLoading
-        || info.state == JKDownloadStateSuccessed) return info;
+    if (info.state == JKDownloadStateLoading ||
+        info.state == JKDownloadStateSuccessed ||
+        info.state == JKDownloadStateWaiting ||
+        info.state == JKDownloadStateStop) {
+    
+        return info;
+    }
     
     if (info.customDirectoryPath == nil) {
         [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath progress:nil state:nil];
     }
+    if (self.maxConcurrentCount !=0 && self.maxConcurrentCount == self.loadingInfos.count) {
+        JKDownloadInfo *loadingFirstInfo = self.loadingInfos.firstObject;
+        [loadingFirstInfo suspend];
+    }
+    
     [info resume];
     return info;
 }
@@ -192,11 +201,15 @@
         JKDownloadInfo *info = [self infoWithURL:url];
         [arrM addObject:info];
     }];
-    self.batch = YES;
     [arrM enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
-        [info resume];
+        
+        if (self.maxConcurrentCount !=0 && self.maxConcurrentCount == self.loadingInfos.count) {
+            [info waiting];
+        } else {
+            [info resume];
+        }
+
     }];
-    self.batch = NO;
 }
 
 #warning stop标识 TO DO
@@ -211,27 +224,25 @@
 
 
 - (void)resumeAll {
-    self.batch = YES;
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
-        [info resume];
+        if (self.maxConcurrentCount !=0 && self.maxConcurrentCount == self.loadingInfos.count) {
+            [info waiting];
+        } else {
+            [info resume];
+        }
     }];
-    self.batch = NO;
 }
 
 - (void)suspendAll {
-    self.batch = YES;
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
         [info suspend];
     }];
-    self.batch = NO;
 }
 
 - (void)cancelAll {
-    self.batch = YES;
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
         [info cancel];
     }];
-    self.batch = NO;
 }
 
 #pragma mark ==setter、getter
@@ -240,7 +251,7 @@
     return [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"state==%d", JKDownloadStateLoading]];
 }
 
-- (NSArray *)waitingInfosAtIndexes:(NSIndexSet *)indexes {
+- (NSArray<JKDownloadInfo *> *)waitingInfos {
     return [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"state==%d", JKDownloadStateWaiting]];
 }
 
@@ -263,7 +274,6 @@
 #pragma mark ==private
 
 - (void)resumeNextInfo {
-    if (self.isBatching) return;
     JKDownloadInfo *info = self.waitingInfos.firstObject;
     [info resume];
 }

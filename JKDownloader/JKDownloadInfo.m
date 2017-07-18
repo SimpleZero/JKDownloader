@@ -139,6 +139,12 @@ static NSNotificationCenter *_notiCenter;
     self.state = JKDownloadStateWaiting;
 }
 
+- (void)reload {
+    if (self.state == JKDownloadStateStop) {
+        [self resume];
+    }
+}
+
 - (void)resume {
     if (self.state == JKDownloadStateSuccessed ||
         self.state == JKDownloadStateLoading) {

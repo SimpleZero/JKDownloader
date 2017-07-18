@@ -14,7 +14,7 @@ typedef NS_ENUM(NSInteger, JKDownloadState) {
     JKDownloadStateLoading, // 下载中
     JKDownloadStateWaiting, // 等待中
     JKDownloadStateSuspend, // 暂停
-    JKDownloadStateStop, // 停止（有此标识不再进行下载，直接跳过）
+    JKDownloadStateStop, // 停止（有此标识不再进行下载，直接跳过，调用reload可继续下载）
     JKDownloadStateSuccessed, // 成功
     JKDownloadStateCanceled, // 取消
     JKDownloadStateFailed // 失败
@@ -65,6 +65,7 @@ static NSString * const JKDownloadStateChangedNoti = @"JKDownloadStateChangedNot
 - (NSString *)transferBytesToString:(NSInteger)bytes;
 
 - (void)waiting;
+- (void)reload;
 
 - (void)resume;
 - (void)suspend;
