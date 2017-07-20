@@ -126,8 +126,8 @@
 
 }
 
-- (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url {
-    return [JKDownloadInfo downloadedInfoWithURL:url];
+- (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url {
+    return [JKDownloadInfo downloadedInfoSizeWithURL:url];
 }
 
 
@@ -156,19 +156,19 @@
 - (JKDownloadInfo *)suspendWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
-    if (info.state == JKDownloadStateSuspend) return info;
+    if (info.state == JKDownloadStateSuspended) return info;
     
     [info suspend];
     [self resumeNextInfo];
     return info;
 }
 
-- (JKDownloadInfo *)cancelWithURL:(NSString *)url {
+- (JKDownloadInfo *)cancel_deleteWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
     if (info.state == JKDownloadStateCanceled) return info;
     
-    [info cancel];
+    [info cancel_delete];
     /*
      cancel 会触发 NSURLSessionDataDelegate 中的 didCompleteWithError，
      这个方法中已经调用 [self resumeNextInfo]，此处无需再次调用
@@ -183,8 +183,9 @@
     JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
     if (info == nil) {
         // 磁盘中查找info（判断是否已下载完成）
-        info = [JKDownloadInfo downloadedInfoWithURL:url];
-        if (info.state != JKDownloadStateSuccessed) {
+        info = [JKDownloadInfo downloadedInfoSizeWithURL:url];
+        if (info.state != JKDownloadStateSuccessed ||
+            (info.totalSize != 0 && info.totalSize == info.downloadedSize)) {
             // 磁盘中未下载完成、从未下载
             info = [JKDownloadInfo infoWithURL:url inSession:self.session];
             [self.infos addObject:info];;
@@ -217,13 +218,12 @@
     }];
 }
 
-- (void)cancelWithURLs:(NSArray<NSString *> *)urls {
+- (void)cancel_deleteWithURLs:(NSArray<NSString *> *)urls {
     [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger idx, BOOL * _Nonnull stop) {
         JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
-        [info cancel];
+        [info cancel_delete];
     }];
 }
-
 
 - (void)resumeAll {
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -241,9 +241,9 @@
     }];
 }
 
-- (void)cancelAll {
+- (void)cancel_deleteAll {
     [self.infos enumerateObjectsUsingBlock:^(JKDownloadInfo * _Nonnull info, NSUInteger idx, BOOL * _Nonnull stop) {
-        [info cancel];
+        [info cancel_delete];
     }];
 }
 

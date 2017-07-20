@@ -13,7 +13,7 @@ typedef NS_ENUM(NSInteger, JKDownloadState) {
     JKDownloadStateNone = 0, // 空闲、占位
     JKDownloadStateLoading, // 下载中
     JKDownloadStateWaiting, // 等待中
-    JKDownloadStateSuspend, // 暂停
+    JKDownloadStateSuspended, // 暂停
     JKDownloadStateSuccessed, // 成功
     JKDownloadStateCanceled, // 取消
     JKDownloadStateFailed // 失败
@@ -60,14 +60,14 @@ static NSString * const JKDownloadStateChangedNoti = @"JKDownloadStateChangedNot
 - (void)infoConfigWithCustomDirectoryPath:(NSString *)customDirectoryPath encapsulateprogress:(JKDownloadEncapsulateProgressBlock)encapsulateprogress state:(JKDownloadStateBlock)state;
 
 
-+ (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url;
++ (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url;
 - (NSString *)transferBytesToString:(NSInteger)bytes;
 
 - (void)waiting;
 
 - (void)resume;
 - (void)suspend;
-- (void)cancel;
+- (void)cancel_delete;
 
 - (void)didReceiveResponse:(NSHTTPURLResponse *)response;
 - (void)didReceiveData:(NSData *)data;

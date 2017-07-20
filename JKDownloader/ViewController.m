@@ -62,38 +62,40 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
     _monitorV = monitorV;
     
     
-    JKDownloadInfo *info = [[JKDownloadManager shareManager] infoWithURL:url];
+    JKDownloadInfo *info = [[JKDownloadManager shareManager] downloadedInfoSizeWithURL:url];
     [monitorV configMonitorWithDownloaded:info.downloadedSizeString total:info.totalSizeString speed:@"" progress:info.progress];
+    [self btnTitleWithState:info.state];
+    NSLog(@"state:%zd\nfilePath:%@", info.state, info.filePath);
+}
+
+- (void)btnTitleWithState:(JKDownloadState)state {
+    switch (state) {
+        case JKDownloadStateSuccessed:
+            [_resumeBtn setTitle:@"完成" forState:UIControlStateNormal];
+            break;
+        case JKDownloadStateFailed:
+            [_resumeBtn setTitle:@"重试" forState:UIControlStateNormal];
+            break;
+        case JKDownloadStateSuspended:
+            [_resumeBtn setTitle:@"继续" forState:UIControlStateNormal];
+            break;
+        case JKDownloadStateLoading:
+            [_resumeBtn setTitle:@"下载中" forState:UIControlStateNormal];
+            break;
+        case JKDownloadStateWaiting:
+            [_resumeBtn setTitle:@"等待" forState:UIControlStateNormal];
+            break;
+        default:
+            [_resumeBtn setTitle:@"开始" forState:UIControlStateNormal];
+            break;
+    }
 }
 
 - (void)resume:(UIButton *)btn {
     [[JKDownloadManager shareManager] loadFileForURL:url encapsulateProgress:^(NSString *speed, NSString *downloadedSize, NSString *totalSize, float progress) {
         [_monitorV configMonitorWithDownloaded:downloadedSize total:totalSize speed:speed progress:progress];
     } state:^(JKDownloadState state, NSString *filePath, NSError *error) {
-        switch (state) {
-            case JKDownloadStateSuccessed:
-                [btn setTitle:@"完成" forState:UIControlStateNormal];
-                _resumeBtn.enabled = NO;
-                _suspendBtn.enabled = NO;
-                _cancelBtn.enabled = NO;
-                break;
-            case JKDownloadStateFailed:
-                [btn setTitle:@"重试" forState:UIControlStateNormal];
-                break;
-            case JKDownloadStateSuspend:
-                [btn setTitle:@"继续" forState:UIControlStateNormal];
-                break;
-            case JKDownloadStateLoading:
-                [btn setTitle:@"下载中" forState:UIControlStateNormal];
-                break;
-            case JKDownloadStateWaiting:
-                [btn setTitle:@"等待" forState:UIControlStateNormal];
-                break;
-            default:
-                [btn setTitle:@"开始" forState:UIControlStateNormal];
-                break;
-        }
-        
+        [self btnTitleWithState:state];
         NSLog(@"state:%zd\nfilePath:%@\nerror:%@", state, filePath, error);
     }];
 }
@@ -103,7 +105,7 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
 }
 
 - (void)cancel:(UIButton *)btn {
-    [[JKDownloadManager shareManager] cancelWithURL:url];
+    [[JKDownloadManager shareManager] cancel_deleteWithURL:url];
 }
 
 

@@ -103,14 +103,12 @@ static NSNotificationCenter *_notiCenter;
     if (state != nil) self.stateBlock = [state copy];
 }
 
-+ (JKDownloadInfo *)downloadedInfoWithURL:(NSString *)url {
++ (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url {
     if (url == nil) return nil;
     
     JKDownloadInfo *info = [[JKDownloadInfo alloc] init];
     info.url = [url copy];
-    return [info downloadedInfo];
-    
-    return nil;
+    return [info downloadedInfoSize];
 }
 
 - (NSString *)transferBytesToString:(NSInteger)bytes {
@@ -152,17 +150,18 @@ static NSNotificationCenter *_notiCenter;
 
 - (void)suspend {
     if (self.state == JKDownloadStateSuccessed ||
-        self.state == JKDownloadStateSuspend ||
+        self.state == JKDownloadStateSuspended ||
         self.state == JKDownloadStateCanceled) {
         return;
     }
     [self.dataTask suspend];
+    [self changeProgress];
     [self.timer setFireDate:[NSDate distantFuture]];
     
-    self.state = JKDownloadStateSuspend;
+    self.state = JKDownloadStateSuspended;
 }
 
-- (void)cancel {
+- (void)cancel_delete {
     if (self.state == JKDownloadStateSuccessed ||
         self.state == JKDownloadStateCanceled) {
         return;
@@ -180,11 +179,17 @@ static NSNotificationCenter *_notiCenter;
 
 - (void)didReceiveResponse:(NSHTTPURLResponse *)response {
     
-    
     self.currentSize = 0;
-        
-    //        self.totalSize = [response.allHeaderFields[@"Content-Length"] integerValue];
-    self.totalSize = response.expectedContentLength + self.downloadedSize;
+    
+    NSString *range = response.allHeaderFields[@"Content-Range"];
+
+    if (range != nil) {
+        NSString *totalSize = range.lastPathComponent;
+        self.totalSize = totalSize.integerValue;
+    } else {
+        self.totalSize = response.expectedContentLength + self.downloadedSize;
+    }
+    
     [self saveSizeToPlist];
     
     [self.outputStream open];
@@ -205,13 +210,7 @@ static NSNotificationCenter *_notiCenter;
             self.state = JKDownloadStateLoading;
             
             
-            dispatch_async(dispatch_get_main_queue(), ^{
-                !self.progressBlock ? : self.progressBlock(self.currentSize, self.downloadedSize, self.totalSize);
-                !self.encapsulateProgressBlock ? : self.encapsulateProgressBlock(self.speed, self.downloadedSizeString, self.totalSizeString, self.progress);
-                if (self.needNoti) {
-                    [_notiCenter postNotificationName:JKDownloadProgressChangedNoti object:self];
-                }
-            });
+            [self changeProgress];
             
         }
     }
@@ -222,7 +221,7 @@ static NSNotificationCenter *_notiCenter;
     if (error != nil) {
         self.error = error;
     }
-    if (self.state == JKDownloadStateSuspend ||
+    if (self.state == JKDownloadStateSuspended ||
         self.state == JKDownloadStateSuccessed) {
         return;
     }
@@ -232,11 +231,7 @@ static NSNotificationCenter *_notiCenter;
         self.state = JKDownloadStateSuccessed;
     }
     
-    dispatch_async(dispatch_get_main_queue(), ^{
-        !self.progressBlock ? : self.progressBlock(self.currentSize, self.downloadedSize, self.totalSize);
-        
-        !self.encapsulateProgressBlock ? : self.encapsulateProgressBlock(self.speed, self.downloadedSizeString, self.totalSizeString, self.progress);
-    });
+    [self changeProgress];
 }
 
 #pragma mark ==setter、getter
@@ -303,9 +298,9 @@ static NSNotificationCenter *_notiCenter;
     
     if (error != nil) {
         // 挂起后请求超时 The request timed out.
-        if (error.code == -1001 || _state == JKDownloadStateSuspend) {
+        if (error.code == -1001 || _state == JKDownloadStateSuspended) {
             _error = nil;
-            _dataTask = nil;
+            [self done];
         } else if (error.code == -999) {
             if (_state != JKDownloadStateCanceled) {
                 self.state = JKDownloadStateCanceled;
@@ -316,6 +311,7 @@ static NSNotificationCenter *_notiCenter;
             }
         }
         
+        [self changeProgress];
     }
 }
 
@@ -392,18 +388,29 @@ static NSNotificationCenter *_notiCenter;
     _timer = nil;
 }
 
+- (void)changeProgress {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        !self.progressBlock ? : self.progressBlock(self.currentSize, self.downloadedSize, self.totalSize);
+        !self.encapsulateProgressBlock ? : self.encapsulateProgressBlock(self.speed, self.downloadedSizeString, self.totalSizeString, self.progress);
+        if (self.needNoti) {
+            [_notiCenter postNotificationName:JKDownloadProgressChangedNoti object:self];
+        }
+    });
+}
+
 - (void)saveSizeToPlist {
+    if (self.totalSize == 0) return;
+    
     NSMutableDictionary *totalFilesSizeDic = JKTotalFilesSizeDictionary.mutableCopy ? : [NSMutableDictionary dictionary];
     totalFilesSizeDic[self.url.jk_md5] = @(self.totalSize);
     [totalFilesSizeDic writeToFile:JKTotalFilesSizePlistPath atomically:YES];
 }
 
 
-- (JKDownloadInfo *)downloadedInfo {
+- (JKDownloadInfo *)downloadedInfoSize {
     [self infoConfigWithCustomDirectoryPath:JKDownloadRootDirectory progress:nil state:nil];
     return self;
 }
-
 
 - (void)sizePerSec {
     self.downloadSizePerSec = self.currentSizePerSec;
