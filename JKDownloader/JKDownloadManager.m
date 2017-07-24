@@ -129,11 +129,6 @@
     return info;
 }
 
-- (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url {
-    return [JKDownloadInfo downloadedInfoSizeWithURL:url];
-}
-
-
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url {
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
@@ -185,7 +180,9 @@
     JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
     if (info == nil) {
         // 磁盘中查找info（判断是否已下载完成）
-        info = [JKDownloadInfo downloadedInfoSizeWithURL:url];
+//        info = [JKDownloadInfo downloadedInfoSizeWithURL:url];
+        info = [JKDownloadInfo infoWithURL:url inSession:nil];
+        
         if (info.state != JKDownloadStateSuccessed ||
             (info.totalSize != 0 && info.totalSize == info.downloadedSize)) {
             // 磁盘中未下载完成、从未下载

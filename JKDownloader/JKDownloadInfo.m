@@ -83,6 +83,9 @@ static NSNotificationCenter *_notiCenter;
     
     JKDownloadInfo *info = [[JKDownloadInfo alloc] init];
     info.url = [url copy];
+    
+    if (session == nil) return info;
+    
     info.unownedSession = session;
     NSMutableURLRequest *requestM = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
     requestM.timeoutInterval = 60;
@@ -102,14 +105,6 @@ static NSNotificationCenter *_notiCenter;
     if (customDirectoryPath != nil) self.customDirectoryPath = [customDirectoryPath copy];
     if (encapsulateprogress != nil) self.encapsulateProgressBlock = [encapsulateprogress copy];
     if (state != nil) self.stateBlock = [state copy];
-}
-
-+ (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url {
-    if (url == nil) return nil;
-    
-    JKDownloadInfo *info = [[JKDownloadInfo alloc] init];
-    info.url = [url copy];
-    return [info downloadedInfoSize];
 }
 
 - (NSString *)transferBytesToString:(NSInteger)bytes {
@@ -289,7 +284,7 @@ static NSNotificationCenter *_notiCenter;
         [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
     }
     
-    if (self.downloadSizePerSec == 0) return @"";
+//    if (self.downloadSizePerSec == 0) return @"";
     
     return [[self transferBytesToString:self.downloadSizePerSec] stringByAppendingString:@"/s"];
 }
@@ -421,12 +416,6 @@ static NSNotificationCenter *_notiCenter;
     NSMutableDictionary *totalFilesSizeDic = JKTotalFilesSizeDictionary.mutableCopy ? : [NSMutableDictionary dictionary];
     totalFilesSizeDic[self.url.jk_md5] = @(self.totalSize);
     [totalFilesSizeDic writeToFile:JKTotalFilesSizePlistPath atomically:YES];
-}
-
-
-- (JKDownloadInfo *)downloadedInfoSize {
-    [self infoConfigWithCustomDirectoryPath:JKDownloadRootDirectory progress:nil state:nil];
-    return self;
 }
 
 - (void)sizePerSec {
