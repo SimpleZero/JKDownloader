@@ -19,6 +19,12 @@ typedef NS_ENUM(NSInteger, JKDownloadState) {
     JKDownloadStateFailed // 失败
 };
 
+
+typedef NS_ENUM(NSUInteger, JKTask) {
+    JKTaskOfData = 0,
+    JKTaskOfDownload
+};
+
 typedef void (^JKDownloadProgressBlock)(NSInteger currentSize, NSInteger downloadedSize, NSInteger totalSize);
 typedef void (^JKDownloadEncapsulateProgressBlock)(NSString *speed, NSString *downloadedSize, NSString *totalSize, float progress);
 
@@ -28,6 +34,8 @@ static NSString * const JKDownloadProgressChangedNoti = @"JKDownloadProgressChan
 static NSString * const JKDownloadStateChangedNoti = @"JKDownloadStateChangedNoti";
 
 @interface JKDownloadInfo : NSObject
+
+@property (assign, nonatomic) JKTask taskOption;
 
 // default is NO
 @property (assign, nonatomic) BOOL needNoti;
@@ -47,11 +55,9 @@ static NSString * const JKDownloadStateChangedNoti = @"JKDownloadStateChangedNot
 @property (assign, nonatomic, readonly) float progress;
 
 
-
 @property (assign, nonatomic, readonly) JKDownloadState state;
 @property (strong, nonatomic, readonly) NSError *error;
 
-@property (strong, nonatomic, readonly) NSURLSessionDataTask *dataTask;
 
 + (instancetype)infoWithURL:(NSString *)url inSession:(NSURLSession *)session;
 

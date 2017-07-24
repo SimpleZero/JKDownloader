@@ -83,15 +83,16 @@ static NSNotificationCenter *_notiCenter;
     
     JKDownloadInfo *info = [[JKDownloadInfo alloc] init];
     info.url = [url copy];
-    
     if (session == nil) return info;
     
     info.unownedSession = session;
+    /*
     NSMutableURLRequest *requestM = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
     requestM.timeoutInterval = 60;
     [requestM setValue:[NSString stringWithFormat:@"bytes=%zd-", info.downloadedSize] forHTTPHeaderField:@"Range"];
     info.dataTask = [session dataTaskWithRequest:requestM];
     info.dataTask.taskDescription = info.url;
+     */
     return info;
 }
 
@@ -242,6 +243,20 @@ static NSNotificationCenter *_notiCenter;
 }
 
 #pragma mark ==setter、getter
+
+- (void)setTaskOption:(JKTask)taskOption {
+    _taskOption = taskOption;
+    
+    if (taskOption == JKTaskOfData) {
+        NSMutableURLRequest *requestM = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:self.url]];
+        requestM.timeoutInterval = 60;
+        [requestM setValue:[NSString stringWithFormat:@"bytes=%zd-", self.downloadedSize] forHTTPHeaderField:@"Range"];
+        _dataTask = [self.unownedSession dataTaskWithRequest:requestM];
+        _dataTask.taskDescription = self.url;
+    } else {
+        
+    }
+}
 
 - (NSURLSessionDataTask *)dataTask {
     if (_dataTask == nil) {

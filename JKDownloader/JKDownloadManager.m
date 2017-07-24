@@ -19,6 +19,8 @@
 
 @property (strong, nonatomic) NSURLSession *session;
 
+@property (assign, nonatomic) JKTask taskOption;
+
 @end
 
 @implementation JKDownloadManager
@@ -33,6 +35,7 @@
         self.needNoti = NO;
         self.downloadDirectoryPath = JKDownloadDefaultDirectory;
         self.session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:nil];
+        self.taskOption = JKTaskOfData;
     }
     return self;
 }
@@ -50,6 +53,26 @@
 
 + (instancetype)manager {
     return [[self alloc] init];
+}
+
++ (instancetype)shareManagerWithTaskOption:(JKTask)task {
+    static JKDownloadManager *mgr;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        mgr = [[JKDownloadManager alloc] init];
+        if (task != JKTaskOfData) {
+            mgr.taskOption = task;
+        }
+    });
+    return mgr;
+}
+
++ (instancetype)managerWithTaskOption:(JKTask)task {
+    JKDownloadManager *mgr = [[JKDownloadManager alloc] init];
+    if (task != JKTaskOfData) {
+        mgr.taskOption = task;
+    }
+    return mgr;
 }
 
 - (void)managerInvalidateAndCancel {
@@ -180,13 +203,14 @@
     JKDownloadInfo *info = [self.infos filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"url==%@", url]].firstObject;
     if (info == nil) {
         // 磁盘中查找info（判断是否已下载完成）
-//        info = [JKDownloadInfo downloadedInfoSizeWithURL:url];
         info = [JKDownloadInfo infoWithURL:url inSession:nil];
+        [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath progress:nil state:nil];
         
         if (info.state != JKDownloadStateSuccessed ||
             (info.totalSize != 0 && info.totalSize == info.downloadedSize)) {
             // 磁盘中未下载完成、从未下载
             info = [JKDownloadInfo infoWithURL:url inSession:self.session];
+            info.taskOption = self.taskOption;
             [self.infos addObject:info];;
         }
     }
@@ -259,7 +283,7 @@
 - (void)setEnableBackgoundLoad:(BOOL)enableBackgoundLoad {
     _enableBackgoundLoad = enableBackgoundLoad;
     if (enableBackgoundLoad) {
-        NSURLSessionConfiguration *confi =  [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:JKDownloadBackgroundIdentifier];
+        NSURLSessionConfiguration *confi =  [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:self.backgroundIdentify];
         confi.networkServiceType = NSURLNetworkServiceTypeBackground;
         self.session = [NSURLSession sessionWithConfiguration:confi delegate:self delegateQueue:nil];
     }
@@ -269,6 +293,14 @@
     if (maxConcurrentCount > 0) {
         _maxConcurrentCount = maxConcurrentCount;
     }
+}
+
+- (NSString *)backgroundIdentify {
+    if (_backgroundIdentify == nil) {
+        NSString *bundleId = [NSBundle mainBundle].infoDictionary[@"CFBundleIdentifier"];
+        _backgroundIdentify = [bundleId stringByAppendingString:@".JKDownloader"];
+    }
+    return _backgroundIdentify;
 }
 
 
