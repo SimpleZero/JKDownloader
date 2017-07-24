@@ -52,78 +52,81 @@
     return [[self alloc] init];
 }
 
-
-
-
-
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url progress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state {
-    
-    return [self loadFileForURL:url inDirectory:nil withProgress:progress state:state];
+- (void)managerInvalidateAndCancel {
+    [self.session invalidateAndCancel];
 }
 
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url inDirectory:(NSString *)directory withProgress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state {
+- (void)managerFinishTasksAndInvalidate {
+    [self.session finishTasksAndInvalidate];
+}
+
+- (JKDownloadInfo *)loadInfoWithURL:(NSString *)url progress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state {
     
     if (url == nil) return nil;
     
     JKDownloadInfo *info = [self infoWithURL:url];
     
     if (info.state == JKDownloadStateSuccessed ||
-        info.state == JKDownloadStateLoading ||
-        info.state == JKDownloadStateWaiting) {
+        info.state == JKDownloadStateLoading) {
         return info;
     }
     
+    [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath progress:progress state:state];
     
-    [info infoConfigWithCustomDirectoryPath:directory progress:progress state:state];
-    if (self.maxConcurrentCount !=0 && self.maxConcurrentCount == self.loadingInfos.count) {
-        JKDownloadInfo *loadingFirstInfo = self.loadingInfos.firstObject;
-        [loadingFirstInfo suspend];
-    }
-    [info resume];
+    [self resumeWithURL:url];
+    
     return info;
 }
 
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url inDirectory:(NSString *)directory withProgress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state enableBackgoundLoad:(BOOL)enableBackgoundLoad {
-    
-    self.enableBackgoundLoad = enableBackgoundLoad;
-    return [self loadFileForURL:url inDirectory:directory withProgress:progress state:state];
-}
-
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state {
+- (JKDownloadInfo *)loadInfoWithURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state {
     
     if (url == nil) return nil;
     
     JKDownloadInfo *info = [self infoWithURL:url];
-    
-    // 已完成
-    if (info.state == JKDownloadStateSuccessed) {
-        
-        !encapsulateProgress ? : encapsulateProgress ([info transferBytesToString:info.currentSize], [info transferBytesToString:info.downloadedSize], [info transferBytesToString:info.totalSize], info.progress);
-        !state ? : state(JKDownloadStateSuccessed, info.filePath, nil);
-        
-        info.needNoti = self.needNoti;
-        
+    if (info.state == JKDownloadStateSuccessed ||
+        info.state == JKDownloadStateLoading) {
         return info;
     }
-    
     
     [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath encapsulateprogress:encapsulateProgress state:state];
+    
+    [self resumeWithURL:url];
+    
+    return info;
+}
+
+- (JKDownloadInfo *)waitInfoWithURL:(NSString *)url progress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state {
+    
+    if (url == nil) return nil;
+    
+    JKDownloadInfo *info = [self infoWithURL:url];
+    
     if (info.state == JKDownloadStateSuccessed ||
-        info.state == JKDownloadStateLoading ||
         info.state == JKDownloadStateWaiting) {
-        
-        !encapsulateProgress ? : encapsulateProgress ([info transferBytesToString:info.currentSize], [info transferBytesToString:info.downloadedSize], [info transferBytesToString:info.totalSize], info.progress);
-        !state ? : state(JKDownloadStateSuccessed, info.filePath, nil);
         return info;
     }
     
-    if (self.maxConcurrentCount !=0 && self.maxConcurrentCount == self.loadingInfos.count) {
-        [info waiting];
-    } else {
-        [info resume];
-    }
+    [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath progress:progress state:state];
+    
+    [info waiting];
+    
     return info;
+}
 
+- (JKDownloadInfo *)waitInfoWithURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state {
+    if (url == nil) return nil;
+    
+    JKDownloadInfo *info = [self infoWithURL:url];
+    if (info.state == JKDownloadStateSuccessed ||
+        info.state == JKDownloadStateLoading) {
+        return info;
+    }
+    
+    [info infoConfigWithCustomDirectoryPath:self.downloadDirectoryPath encapsulateprogress:encapsulateProgress state:state];
+    
+    [info waiting];
+    
+    return info;
 }
 
 - (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url {
@@ -135,8 +138,7 @@
     if (url == nil) return nil;
     JKDownloadInfo *info = [self infoWithURL:url];
     if (info.state == JKDownloadStateLoading ||
-        info.state == JKDownloadStateSuccessed ||
-        info.state == JKDownloadStateWaiting) {
+        info.state == JKDownloadStateSuccessed) {
     
         return info;
     }
@@ -296,6 +298,8 @@
     [info didReceiveData:data];
 }
 
+#pragma mark ==NSURLSessionTaskDelegate
+
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
     
     JKDownloadInfo *info = [self infoWithURL:task.taskDescription];
@@ -304,12 +308,14 @@
     [self resumeNextInfo];
 }
 
+#pragma mark ==NSURLSessionDelegate
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session {
     
-    self.backgroundTransferCompletionHandler();
-    self.backgroundTransferCompletionHandler = nil;
-
+    if (self.backgroundTransferCompletionHandler != nil) {
+        self.backgroundTransferCompletionHandler();
+        self.backgroundTransferCompletionHandler = nil;
+    }
 }
 
 

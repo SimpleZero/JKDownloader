@@ -13,6 +13,7 @@
 
 static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundIdentifier";
 
+
 @interface JKDownloadManager : NSObject
 
 #pragma mark ==backgoundLoad
@@ -21,8 +22,8 @@ static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundI
 // AppDelegate -application: handleEventsForBackgroundURLSession: completionHandler: 中 completionHandler回调
 @property (copy, nonatomic) void(^backgroundTransferCompletionHandler)();
 
-#pragma mark ==download config
-// default is 1
+
+// default is -1
 @property (assign, nonatomic) NSInteger maxConcurrentCount;
 // default is JKDownloadDefaultDirectory(宏定义，见.m)
 @property (strong, nonatomic) NSString *downloadDirectoryPath;
@@ -30,20 +31,25 @@ static NSString * const JKDownloadBackgroundIdentifier = @"JKDownloadBackgroundI
 @property (assign, nonatomic) BOOL needNoti;
 
 + (instancetype)shareManager;
++ (instancetype)manager;
 
+// 如果不使用shareManager生成实例，在不使用实例时需调用这两个方法之一，否则会有内存泄漏
+- (void)managerInvalidateAndCancel;
+- (void)managerFinishTasksAndInvalidate;
 
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url progress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state;
+// 下载
+- (JKDownloadInfo *)loadInfoWithURL:(NSString *)url progress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state;
+- (JKDownloadInfo *)loadInfoWithURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state;
 
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url inDirectory:(NSString *)directory withProgress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state;
-
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url inDirectory:(NSString *)directory withProgress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state enableBackgoundLoad:(BOOL)enableBackgoundLoad;
-
-- (JKDownloadInfo *)loadFileForURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state;
+// 等待
+- (JKDownloadInfo *)waitInfoWithURL:(NSString *)url progress:(JKDownloadProgressBlock)progress state:(JKDownloadStateBlock)state;
+- (JKDownloadInfo *)waitInfoWithURL:(NSString *)url encapsulateProgress:(JKDownloadEncapsulateProgressBlock)encapsulateProgress state:(JKDownloadStateBlock)state;
 
 
 // 获取下载info对应的size，不可用于下载
-- (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url;
-
+//- (JKDownloadInfo *)downloadedInfoSizeWithURL:(NSString *)url;
+// 获取下载info对应的所有属性信息，可用于下载
+- (JKDownloadInfo *)infoWithURL:(NSString *)url;
 
 // 开始/继续
 - (JKDownloadInfo *)resumeWithURL:(NSString *)url;

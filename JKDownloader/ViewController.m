@@ -62,7 +62,8 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
     _monitorV = monitorV;
     
     
-    JKDownloadInfo *info = [[JKDownloadManager shareManager] downloadedInfoSizeWithURL:url];
+//    JKDownloadInfo *info = [[JKDownloadManager shareManager] downloadedInfoSizeWithURL:url];
+    JKDownloadInfo *info = [[JKDownloadManager shareManager] infoWithURL:url];
     [monitorV configMonitorWithDownloaded:info.downloadedSizeString total:info.totalSizeString speed:@"" progress:info.progress];
     [self btnTitleWithState:info.state];
     NSLog(@"state:%zd\nfilePath:%@", info.state, info.filePath);
@@ -92,7 +93,7 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
 }
 
 - (void)resume:(UIButton *)btn {
-    [[JKDownloadManager shareManager] loadFileForURL:url encapsulateProgress:^(NSString *speed, NSString *downloadedSize, NSString *totalSize, float progress) {
+    [[JKDownloadManager shareManager] loadInfoWithURL:url encapsulateProgress:^(NSString *speed, NSString *downloadedSize, NSString *totalSize, float progress) {
         [_monitorV configMonitorWithDownloaded:downloadedSize total:totalSize speed:speed progress:progress];
     } state:^(JKDownloadState state, NSString *filePath, NSError *error) {
         [self btnTitleWithState:state];
@@ -101,11 +102,13 @@ static NSString * const url = @"http://dldir1.qq.com/qqfile/QQforMac/QQ_V6.0.0.d
 }
 
 - (void)suspend:(UIButton *)btn {
-    [[JKDownloadManager shareManager] suspendWithURL:url];
+    JKDownloadInfo *info = [[JKDownloadManager shareManager] suspendWithURL:url];
+    [_monitorV configMonitorWithDownloaded:info.downloadedSizeString total:info.totalSizeString speed:@"" progress:info.progress];
 }
 
 - (void)cancel:(UIButton *)btn {
-    [[JKDownloadManager shareManager] cancel_deleteWithURL:url];
+    JKDownloadInfo *info = [[JKDownloadManager shareManager] cancel_deleteWithURL:url];
+    [_monitorV configMonitorWithDownloaded:info.downloadedSizeString total:info.totalSizeString speed:@"" progress:info.progress];
 }
 
 

@@ -85,6 +85,7 @@ static NSNotificationCenter *_notiCenter;
     info.url = [url copy];
     info.unownedSession = session;
     NSMutableURLRequest *requestM = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
+    requestM.timeoutInterval = 60;
     [requestM setValue:[NSString stringWithFormat:@"bytes=%zd-", info.downloadedSize] forHTTPHeaderField:@"Range"];
     info.dataTask = [session dataTaskWithRequest:requestM];
     info.dataTask.taskDescription = info.url;
@@ -130,51 +131,56 @@ static NSNotificationCenter *_notiCenter;
 
 
 - (void)waiting {
-    if (self.state == JKDownloadStateSuccessed ||
-        self.state == JKDownloadStateWaiting) {
+    if (self.state == JKDownloadStateLoading ||
+        self.state == JKDownloadStateWaiting ||
+        self.state == JKDownloadStateSuccessed) {
         return;
     }
     self.state = JKDownloadStateWaiting;
 }
 
 - (void)resume {
+    
     if (self.state == JKDownloadStateSuccessed ||
         self.state == JKDownloadStateLoading) {
         return;
     }
-    
+
+    self.error = nil;
     [self.dataTask resume];
     [self.timer setFireDate:[NSDate date]];
     self.state = JKDownloadStateLoading;
 }
 
 - (void)suspend {
-    if (self.state == JKDownloadStateSuccessed ||
-        self.state == JKDownloadStateSuspended ||
-        self.state == JKDownloadStateCanceled) {
-        return;
-    }
-    [self.dataTask suspend];
-    [self changeProgress];
-    [self.timer setFireDate:[NSDate distantFuture]];
     
-    self.state = JKDownloadStateSuspended;
+    if (self.state == JKDownloadStateLoading ||
+        self.state == JKDownloadStateWaiting) {
+        [self.dataTask suspend];
+        [self.timer setFireDate:[NSDate distantFuture]];
+        
+        self.state = JKDownloadStateSuspended;
+    }
+    
 }
 
 - (void)cancel_delete {
-    if (self.state == JKDownloadStateSuccessed ||
-        self.state == JKDownloadStateCanceled) {
-        return;
-    }
-    [self.dataTask cancel];
-
+ 
+    if (self.state == JKDownloadStateCanceled) return;
+    
     dispatch_async(dispatch_get_main_queue(), ^{
+
+        if (self.state != JKDownloadStateSuccessed) {
+            [self.dataTask cancel];
+        }
+        self.state = JKDownloadStateCanceled;
+
         [_fileMgr removeItemAtPath:self.filePath error:nil];
         NSMutableDictionary *totalFilesSizeDic = JKTotalFilesSizeDictionary.mutableCopy;
         [totalFilesSizeDic removeObjectForKey:self.url.jk_md5];
         [totalFilesSizeDic writeToFile:JKTotalFilesSizePlistPath atomically:YES];
-        self.state = JKDownloadStateCanceled;
     });
+
 }
 
 - (void)didReceiveResponse:(NSHTTPURLResponse *)response {
@@ -186,6 +192,14 @@ static NSNotificationCenter *_notiCenter;
     if (range != nil) {
         NSString *totalSize = range.lastPathComponent;
         self.totalSize = totalSize.integerValue;
+        
+        if (self.downloadedSize == 0) {
+            NSString *str = [range componentsSeparatedByString:@"-"].lastObject;
+            NSArray *strArr = [str componentsSeparatedByString:@"/"];
+            self.downloadedSize = [strArr.lastObject integerValue] - [strArr.firstObject integerValue];
+        }
+        
+        
     } else {
         self.totalSize = response.expectedContentLength + self.downloadedSize;
     }
@@ -207,8 +221,6 @@ static NSNotificationCenter *_notiCenter;
         } else {
             self.currentSize = data.length;
             self.currentSizePerSec += self.currentSize;
-            self.state = JKDownloadStateLoading;
-            
             
             [self changeProgress];
             
@@ -239,6 +251,7 @@ static NSNotificationCenter *_notiCenter;
 - (NSURLSessionDataTask *)dataTask {
     if (_dataTask == nil) {
         NSMutableURLRequest *requestM = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:self.url]];
+        requestM.timeoutInterval = 60;
         [requestM setValue:[NSString stringWithFormat:@"bytes=%zd-", self.downloadedSize] forHTTPHeaderField:@"Range"];
         _dataTask = [self.unownedSession dataTaskWithRequest:requestM];
         _dataTask.taskDescription = self.url;
@@ -273,7 +286,7 @@ static NSNotificationCenter *_notiCenter;
     
     if (_timer == nil) {
         self.timer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(sizePerSec) userInfo:nil repeats:YES];
-        [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+        [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
     }
     
     if (self.downloadSizePerSec == 0) return @"";
@@ -338,6 +351,7 @@ static NSNotificationCenter *_notiCenter;
 - (NSOutputStream *)outputStream {
     if (_outputStream == nil) {
         _outputStream = [NSOutputStream outputStreamToFileAtPath:self.filePath append:YES];
+        [_outputStream scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     }
     return _outputStream;
 }
@@ -353,8 +367,10 @@ static NSNotificationCenter *_notiCenter;
 }
 
 - (void)setState:(JKDownloadState)state {
-    _state = state;
     
+    if (_state == state) return;
+    
+    _state = state;
     if (state == JKDownloadStateFailed ||
         state == JKDownloadStateCanceled ||
         state == JKDownloadStateSuccessed) {
@@ -375,6 +391,7 @@ static NSNotificationCenter *_notiCenter;
 - (void)done {
 
     [_outputStream close];
+    [_outputStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     _outputStream = nil;
     
     [_dataTask cancel];
