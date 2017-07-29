@@ -19,6 +19,16 @@ stringByAppendingPathComponent:@"JKDownloader"]
 #define JKTotalFilesSizePlistPath [JKDownloadRootDirectory stringByAppendingPathComponent:@"totalFilesSize.plist"]
 #define JKTotalFilesSizeDictionary [NSDictionary dictionaryWithContentsOfFile:JKTotalFilesSizePlistPath]
 
+@interface JKDataTaskInfo : NSObject<NSURLSessionDataDelegate>
+
+@end
+
+@implementation JKDataTaskInfo
+
+
+
+@end
+
 
 @interface JKDownloadInfo ()<NSURLSessionDataDelegate>
 
@@ -43,8 +53,13 @@ stringByAppendingPathComponent:@"JKDownloader"]
 @property (copy, nonatomic) JKDownloadEncapsulateProgressBlock encapsulateProgressBlock;
 @property (copy, nonatomic) JKDownloadStateBlock stateBlock;
 
+// dataTask
 @property (strong, nonatomic) NSURLSessionDataTask *dataTask;
 @property (strong, nonatomic) NSOutputStream *outputStream;
+// downloadTask
+@property (strong, nonatomic) NSURLSessionDownloadTask *downloadTask;
+
+
 @property (weak, nonatomic) NSURLSession *unownedSession;
 
 @property (strong, nonatomic) NSTimer *timer;
@@ -243,20 +258,6 @@ static NSNotificationCenter *_notiCenter;
 }
 
 #pragma mark ==setter、getter
-
-- (void)setTaskOption:(JKTask)taskOption {
-    _taskOption = taskOption;
-    
-    if (taskOption == JKTaskOfData) {
-        NSMutableURLRequest *requestM = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:self.url]];
-        requestM.timeoutInterval = 60;
-        [requestM setValue:[NSString stringWithFormat:@"bytes=%zd-", self.downloadedSize] forHTTPHeaderField:@"Range"];
-        _dataTask = [self.unownedSession dataTaskWithRequest:requestM];
-        _dataTask.taskDescription = self.url;
-    } else {
-        
-    }
-}
 
 - (NSURLSessionDataTask *)dataTask {
     if (_dataTask == nil) {

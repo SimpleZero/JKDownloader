@@ -19,8 +19,6 @@
 
 @property (strong, nonatomic) NSURLSession *session;
 
-@property (assign, nonatomic) JKTask taskOption;
-
 @end
 
 @implementation JKDownloadManager
@@ -35,7 +33,6 @@
         self.needNoti = NO;
         self.downloadDirectoryPath = JKDownloadDefaultDirectory;
         self.session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:nil];
-        self.taskOption = JKTaskOfData;
     }
     return self;
 }
@@ -53,26 +50,6 @@
 
 + (instancetype)manager {
     return [[self alloc] init];
-}
-
-+ (instancetype)shareManagerWithTaskOption:(JKTask)task {
-    static JKDownloadManager *mgr;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        mgr = [[JKDownloadManager alloc] init];
-        if (task != JKTaskOfData) {
-            mgr.taskOption = task;
-        }
-    });
-    return mgr;
-}
-
-+ (instancetype)managerWithTaskOption:(JKTask)task {
-    JKDownloadManager *mgr = [[JKDownloadManager alloc] init];
-    if (task != JKTaskOfData) {
-        mgr.taskOption = task;
-    }
-    return mgr;
 }
 
 - (void)managerInvalidateAndCancel {
@@ -210,7 +187,6 @@
             (info.totalSize != 0 && info.totalSize == info.downloadedSize)) {
             // 磁盘中未下载完成、从未下载
             info = [JKDownloadInfo infoWithURL:url inSession:self.session];
-            info.taskOption = self.taskOption;
             [self.infos addObject:info];;
         }
     }

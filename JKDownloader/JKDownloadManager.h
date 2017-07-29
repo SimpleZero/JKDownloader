@@ -15,9 +15,6 @@
 
 #pragma mark ==backgoundLoad
 
-// default is JKTaskOfData
-@property (assign, nonatomic, readonly) JKTask taskOption;
-
 // default is NO
 @property (assign, nonatomic) BOOL enableBackgoundLoad;
 // AppDelegate -application: handleEventsForBackgroundURLSession: completionHandler: 中 completionHandler回调
@@ -35,9 +32,6 @@
 
 + (instancetype)shareManager;
 + (instancetype)manager;
-
-+ (instancetype)shareManagerWithTaskOption:(JKTask)task;
-+ (instancetype)managerWithTaskOption:(JKTask)task;
 
 // 如果不使用shareManager生成实例，在不使用实例时需调用这两个方法之一，否则会有内存泄漏
 - (void)managerInvalidateAndCancel;
