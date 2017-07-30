@@ -27,6 +27,9 @@ typedef void (^JKDownloadStateBlock)(JKDownloadState state, NSString *filePath, 
 static NSString * const JKDownloadProgressChangedNoti = @"JKDownloadProgressChangedNoti";
 static NSString * const JKDownloadStateChangedNoti = @"JKDownloadStateChangedNoti";
 
+static NSString * const JKDataTaskIdentify = @"JKDataTaskIdentify";
+static NSString * const JKDownloadTaskIdentify = @"JKDownloadTaskIdentify";
+
 @interface JKDownloadInfo : NSObject
 
 // default is NO

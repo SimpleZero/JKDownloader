@@ -13,6 +13,7 @@
 
 @interface JKDownloadManager ()<NSURLSessionDataDelegate>
 
+@property (copy, nonatomic) NSString *identify;
 @property (strong, nonatomic) NSMutableArray <JKDownloadInfo *>*infos;
 @property (strong, nonatomic) NSArray <JKDownloadInfo *>*loadingInfos;
 @property (strong, nonatomic) NSArray <JKDownloadInfo *>*waitingInfos;
@@ -33,12 +34,14 @@
         self.needNoti = NO;
         self.downloadDirectoryPath = JKDownloadDefaultDirectory;
         self.session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:nil];
+        self.session.sessionDescription = self.identify;
     }
     return self;
 }
 
 #pragma mark ==public
 
+/*
 + (instancetype)shareManager {
     static JKDownloadManager *mgr;
     static dispatch_once_t onceToken;
@@ -51,6 +54,39 @@
 + (instancetype)manager {
     return [[self alloc] init];
 }
+ */
+
++ (instancetype)shareDataTaskManager {
+    static JKDownloadManager *mgr;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        mgr = [[JKDownloadManager alloc] init];
+        mgr.identify = JKDataTaskIdentify;
+    });
+    return mgr;
+}
+
++ (instancetype)dataTaskManager {
+    JKDownloadManager *mgr = [[self alloc] init];
+    mgr.identify = JKDataTaskIdentify;
+    return mgr;
+}
+
++ (instancetype)shareDownloadTaskManager {
+    static JKDownloadManager *mgr;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        mgr = [[JKDownloadManager alloc] init];
+        mgr.identify = JKDownloadTaskIdentify;
+    });
+    return mgr;
+}
+
++ (instancetype)downloadTaskManager {
+    JKDownloadManager *mgr = [[self alloc] init];
+    mgr.identify = JKDownloadTaskIdentify;
+    return mgr;
+}// 类簇模式此.m文件刚开始写
 
 - (void)managerInvalidateAndCancel {
     [self.session invalidateAndCancel];

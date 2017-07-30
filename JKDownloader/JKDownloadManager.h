@@ -33,6 +33,12 @@
 + (instancetype)shareManager;
 + (instancetype)manager;
 
++ (instancetype)shareDataTaskManager;
++ (instancetype)dataTaskManager;
+
++ (instancetype)shareDownloadTaskManager;
++ (instancetype)downloadTaskManager;
+
 // 如果不使用shareManager生成实例，在不使用实例时需调用这两个方法之一，否则会有内存泄漏
 - (void)managerInvalidateAndCancel;
 - (void)managerFinishTasksAndInvalidate;
